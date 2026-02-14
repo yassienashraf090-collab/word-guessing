@@ -34,7 +34,7 @@
             padding: 10px 0;
         }
 
-        h1 { margin: 0; letter-spacing: 4px; font-size: 1.5rem; text-transform: uppercase; }
+        h1 { margin: 0; letter-spacing: 2px; font-size: 1.5rem; text-transform: uppercase; }
 
         #game-container {
             flex-grow: 1;
@@ -45,7 +45,7 @@
             width: 100%;
         }
 
-        #message { height: 30px; margin: 10px; font-weight: bold; color: #ffd700; text-align: center; font-size: 1.2rem; }
+        #message { height: 30px; margin: 10px; font-weight: bold; color: #ffd700; text-align: center; font-size: 1.1rem; }
 
         #reset-btn {
             display: none;
@@ -57,29 +57,27 @@
             border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
 
         #board { display: grid; grid-template-rows: repeat(6, 1fr); grid-gap: 5px; padding: 10px; }
         .row { display: grid; grid-template-columns: repeat(5, 1fr); grid-gap: 5px; }
 
         .tile {
-            width: clamp(50px, 15vw, 60px);
-            height: clamp(50px, 15vw, 60px);
+            width: clamp(45px, 13vw, 60px);
+            height: clamp(45px, 13vw, 60px);
             border: 2px solid var(--tile-border);
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: bold;
             text-transform: uppercase;
-            transition: transform 0.6s cubic-bezier(0.45, 0.05, 0.55, 0.95);
+            transition: transform 0.6s;
             transform-style: preserve-3d;
         }
 
-        /* منع شقلبة الحروف أثناء الأنميشن */
         .flip { transform: rotateX(180deg); }
-        .letter-inner { transition: transform 0.6s; pointer-events: none; }
+        .letter-inner { transition: transform 0.6s; }
         .flip .letter-inner { transform: rotateX(180deg); }
 
         .correct { background-color: var(--correct) !important; border-color: var(--correct) !important; }
@@ -93,27 +91,24 @@
         }
         .shake { animation: shake 0.4s; }
 
-        /* الكيبورد */
-        #keyboard { width: 100%; max-width: 500px; padding: 10px; box-sizing: border-box; margin-bottom: 20px; }
+        #keyboard { width: 100%; max-width: 500px; padding: 10px; box-sizing: border-box; margin-bottom: 10px; }
         .kb-row { display: flex; justify-content: center; gap: 4px; margin-bottom: 8px; }
         .key {
             background-color: var(--key-bg);
             color: white;
             border: 0;
             border-radius: 4px;
-            height: 58px;
+            height: 55px;
             cursor: pointer;
             font-weight: bold;
             flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
+            font-size: 0.9rem;
             -webkit-tap-highlight-color: transparent;
         }
-        .key.wide { flex: 1.5; font-size: 0.8rem; }
-        .key.correct { background-color: var(--correct); }
-        .key.present { background-color: var(--present); }
-        .key.absent { background-color: var(--absent); opacity: 0.4; }
+        .key.wide { flex: 1.5; font-size: 0.7rem; }
     </style>
 </head>
 <body>
@@ -121,7 +116,7 @@
     <header><h1>Word Guessing</h1></header>
     
     <div id="game-container">
-        <div id="message"></div>
+        <div id="message">Loading dictionary...</div>
         <button id="reset-btn" onclick="resetGame()">PLAY AGAIN</button>
         <div id="board"></div>
     </div>
@@ -152,14 +147,42 @@
     </div>
 
     <script>
-        const dictionary = ["SMART", "BRAIN", "LIGHT", "SOUND", "PILOT", "PIANO", "GHOST", "WORLD", "APPLE", "BEACH", "DREAM", "FLAME", "MUSIC", "WATER", "TIGER", "HOUSE", "PLANE", "STORM", "BREAD", "FRUIT"];
-        
+        let dictionary = [];
+        let commonWords = [];
         let secretWord = "";
         let currentGuess = "";
         let currentRow = 0;
         let gameOver = false;
 
-        function initBoard() {
+        async function initGame() {
+            try {
+                // جلب قائمة الكلمات المسموح بها (قاموس ضخم)
+                const res1 = await fetch('https://raw.githubusercontent.com/tabatkins/wordle-list/main/words-guessable.txt');
+                const text1 = await res1.text();
+                dictionary = text1.toUpperCase().split('\n').map(w => w.trim());
+
+                // جلب كلمات السر المحتملة (كلمات شائعة)
+                const res2 = await fetch('https://raw.githubusercontent.com/tabatkins/wordle-list/main/words-ranked.txt');
+                const text2 = await res2.text();
+                commonWords = text2.toUpperCase().split('\n').map(w => w.trim()).slice(0, 2500);
+
+                resetGame();
+            } catch (e) {
+                console.error("Failed to load dictionary", e);
+                dictionary = ["SMILE", "SMART", "BRAIN", "WORLD", "HELLO"];
+                commonWords = dictionary;
+                resetGame();
+            }
+        }
+
+        function resetGame() {
+            secretWord = commonWords[Math.floor(Math.random() * commonWords.length)];
+            currentGuess = "";
+            currentRow = 0;
+            gameOver = false;
+            document.getElementById('message').textContent = "";
+            document.getElementById('reset-btn').style.display = "none";
+            
             const board = document.getElementById('board');
             board.innerHTML = "";
             for (let i = 0; i < 6; i++) {
@@ -175,116 +198,95 @@
                 }
                 board.appendChild(r);
             }
+            document.querySelectorAll('.key').forEach(k => k.style.backgroundColor = '');
         }
-
-        function resetGame() {
-            secretWord = dictionary[Math.floor(Math.random() * dictionary.length)];
-            currentGuess = "";
-            currentRow = 0;
-            gameOver = false;
-            document.getElementById('message').textContent = "";
-            document.getElementById('reset-btn').style.display = "none";
-            initBoard();
-            document.querySelectorAll('.key').forEach(k => k.classList.remove('correct', 'present', 'absent'));
-        }
-
-        document.querySelectorAll('.key').forEach(key => {
-            key.addEventListener('click', () => handleInput(key.getAttribute('data-key')));
-        });
-
-        document.addEventListener('keydown', (e) => {
-            if (e.ctrlKey || e.metaKey) return;
-            const k = e.key.toUpperCase();
-            if (k === 'ENTER') handleInput('ENTER');
-            else if (k === 'BACKSPACE') handleInput('BACKSPACE');
-            else if (/^[A-Z]$/.test(k)) handleInput(k);
-        });
 
         function handleInput(k) {
             if (gameOver) return;
-            if (k === 'ENTER') submit();
-            else if (k === 'BACKSPACE') del();
-            else if (currentGuess.length < 5) {
+            if (k === 'ENTER') submitGuess();
+            else if (k === 'BACKSPACE') deleteLetter();
+            else if (currentGuess.length < 5 && /^[A-Z]$/.test(k)) {
                 currentGuess += k;
-                updateTiles();
+                const tile = document.querySelector(`#t-${currentRow}-${currentGuess.length-1} .letter-inner`);
+                tile.textContent = k;
             }
         }
 
-        function updateTiles() {
-            const inner = document.querySelector(`#t-${currentRow}-${currentGuess.length-1} .letter-inner`);
-            if (inner) inner.textContent = currentGuess[currentGuess.length-1];
-        }
-
-        function del() {
+        function deleteLetter() {
             if (currentGuess.length > 0) {
-                document.querySelector(`#t-${currentRow}-${currentGuess.length-1} .letter-inner`).textContent = "";
+                const tile = document.querySelector(`#t-${currentRow}-${currentGuess.length-1} .letter-inner`);
+                tile.textContent = "";
                 currentGuess = currentGuess.slice(0, -1);
             }
         }
 
-        function submit() {
-            if (currentGuess.length < 5) return;
+        function submitGuess() {
+            if (currentGuess.length !== 5) return;
             
-            if (!dictionary.includes(currentGuess)) {
+            if (!dictionary.includes(currentGuess) && !commonWords.includes(currentGuess)) {
                 showMessage("Not in word list!");
-                const rowObj = document.getElementById(`row-${currentRow}`);
-                rowObj.classList.add('shake');
-                setTimeout(() => rowObj.classList.remove('shake'), 400);
+                const row = document.getElementById(`row-${currentRow}`);
+                row.classList.add('shake');
+                setTimeout(() => row.classList.remove('shake'), 400);
                 return;
             }
 
             const guess = currentGuess;
-            gameOver = true; // قفل الإدخال مؤقتاً
-
+            const rowIdx = currentRow;
+            currentRow++;
+            currentGuess = "";
+            
             for (let i = 0; i < 5; i++) {
-                const tile = document.getElementById(`t-${currentRow}-${i}`);
+                const tile = document.getElementById(`t-${rowIdx}-${i}`);
                 const letter = guess[i];
+                
                 setTimeout(() => {
                     tile.classList.add('flip');
                     if (letter === secretWord[i]) {
                         tile.classList.add('correct');
-                        updateKey(letter, 'correct');
+                        updateKey(letter, 'var(--correct)');
                     } else if (secretWord.includes(letter)) {
                         tile.classList.add('present');
-                        updateKey(letter, 'present');
+                        updateKey(letter, 'var(--present)');
                     } else {
                         tile.classList.add('absent');
-                        updateKey(letter, 'absent');
+                        updateKey(letter, '#222');
                     }
                     
-                    if (i === 4) finishTurn(guess);
+                    if (i === 4) checkGameStatus(guess);
                 }, i * 200);
             }
         }
 
-        function finishTurn(guess) {
-            if (guess === secretWord) {
-                showMessage("EXCELLENT! 🏆");
-                document.getElementById('reset-btn').style.display = "block";
-            } else if (currentRow === 5) {
-                showMessage("The word was: " + secretWord);
-                document.getElementById('reset-btn').style.display = "block";
-            } else {
-                gameOver = false;
-                currentRow++;
-                currentGuess = "";
+        function updateKey(l, color) {
+            const key = document.querySelector(`.key[data-key="${l}"]`);
+            if (key.style.backgroundColor !== 'var(--correct)') {
+                key.style.backgroundColor = color;
             }
         }
 
-        function updateKey(l, status) {
-            const btn = document.querySelector(`.key[data-key="${l}"]`);
-            if (btn.classList.contains('correct')) return;
-            btn.classList.remove('present', 'absent');
-            btn.classList.add(status);
+        function checkGameStatus(guess) {
+            if (guess === secretWord) {
+                showMessage("Excellent! 🏆");
+                gameOver = true;
+                document.getElementById('reset-btn').style.display = "block";
+            } else if (currentRow === 6) {
+                showMessage("The word was: " + secretWord);
+                gameOver = true;
+                document.getElementById('reset-btn').style.display = "block";
+            }
         }
 
         function showMessage(msg) {
             const m = document.getElementById('message');
             m.textContent = msg;
-            if(msg.includes("list")) setTimeout(() => { if(m.textContent === msg) m.textContent = ""; }, 2000);
+            if (msg.includes("list")) setTimeout(() => m.textContent = "", 2000);
         }
 
-        resetGame();
+        document.querySelectorAll('.key').forEach(k => k.addEventListener('click', () => handleInput(k.dataset.key)));
+        document.addEventListener('keydown', (e) => handleInput(e.key.toUpperCase()));
+
+        initGame();
     </script>
 </body>
 </html>
