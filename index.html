@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Wordle Pro Elite</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wordle Master</title>
     <style>
         :root {
             --bg: #121213;
@@ -12,144 +12,142 @@
             --present: #b59f3b;
             --absent: #3a3a3c;
             --text: #ffffff;
-            --key-bg: #818384;
         }
-
         body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: 'Segoe UI', sans-serif;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
+            background-color: var(--bg); color: var(--text);
+            font-family: 'Arial', sans-serif; display: flex; flex-direction: column;
+            align-items: center; height: 100vh; margin: 0; justify-content: space-between;
         }
-
-        header { border-bottom: 1px solid var(--tile-border); width: 100%; text-align: center; padding: 10px 0; }
-
-        #game-container { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; }
-        #message { height: 30px; margin: 10px; font-weight: bold; color: #ffd700; font-size: 1.2rem; }
-
-        /* الأنميشن والبور بورد */
+        header { border-bottom: 1px solid var(--tile-border); width: 100%; text-align: center; padding: 15px; }
         #board { display: grid; grid-template-rows: repeat(6, 1fr); grid-gap: 5px; padding: 10px; }
         .row { display: grid; grid-template-columns: repeat(5, 1fr); grid-gap: 5px; }
         
         .tile {
-            width: 55px; height: 55px; border: 2px solid var(--tile-border);
+            width: 60px; height: 60px; border: 2px solid var(--tile-border);
             display: flex; justify-content: center; align-items: center;
             font-size: 2rem; font-weight: bold; text-transform: uppercase;
-            perspective: 1000px;
+            transition: transform 0.6s, background-color 0.6s; /* ده سر الأنميشن */
         }
 
-        .tile-inner {
-            width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;
-            transition: transform 0.6s; transform-style: preserve-3d;
-        }
-
-        /* حركات الأنميشن */
-        .flip .tile-inner { transform: rotateX(180deg); }
-        .correct, .present, .absent { color: white; }
+        /* أنميشن القلب (Flip) */
+        .flip { transform: rotateX(180deg); }
+        
         .correct { background-color: var(--correct); border-color: var(--correct); }
         .present { background-color: var(--present); border-color: var(--present); }
         .absent { background-color: var(--absent); border-color: var(--absent); }
 
-        #keyboard { width: 100%; max-width: 500px; padding: 10px; margin-bottom: 10px; }
-        .kb-row { display: flex; justify-content: center; gap: 4px; margin-bottom: 8px; }
+        #keyboard { width: 100%; max-width: 500px; padding: 10px; margin-bottom: 20px; }
+        .kb-row { display: flex; justify-content: center; gap: 5px; margin-bottom: 8px; }
         .key {
-            background-color: var(--key-bg); color: white; border: 0; border-radius: 4px;
+            background-color: #818384; color: white; border: 0; border-radius: 4px;
             height: 58px; cursor: pointer; flex: 1; font-weight: bold;
-            display: flex; align-items: center; justify-content: center;
         }
-        .key.wide { flex: 1.5; font-size: 0.8rem; }
+        .key.wide { flex: 1.5; }
+        #message { font-weight: bold; color: #ffd700; height: 25px; }
     </style>
 </head>
 <body>
 
-    <header><h1>WORDLE PRO</h1></header>
-    
-    <div id="game-container">
-        <div id="message"></div>
-        <div id="board"></div>
-        <button id="reset-btn" style="display:none; margin-top:20px; padding:12px 24px; background: var(--correct); color:white; border:none; border-radius:5px; cursor:pointer;" onclick="location.reload()">PLAY AGAIN</button>
-    </div>
+<header><h1>WORDLE PRO</h1></header>
+<div id="message"></div>
+<div id="board"></div>
 
-    <div id="keyboard">
-        <div class="kb-row">
-            <button class="key" data-key="Q">Q</button><button class="key" data-key="W">W</button><button class="key" data-key="E">E</button><button class="key" data-key="R">R</button><button class="key" data-key="T">T</button><button class="key" data-key="Y">Y</button><button class="key" data-key="U">U</button><button class="key" data-key="I">I</button><button class="key" data-key="O">O</button><button class="key" data-key="P">P</button>
-        </div>
-        <div class="kb-row">
-            <button class="key" data-key="A">A</button><button class="key" data-key="S">S</button><button class="key" data-key="D">D</button><button class="key" data-key="F">F</button><button class="key" data-key="G">G</button><button class="key" data-key="H">H</button><button class="key" data-key="J">J</button><button class="key" data-key="K">K</button><button class="key" data-key="L">L</button>
-        </div>
-        <div class="kb-row">
-            <button class="key wide" data-key="ENTER">ENTER</button>
-            <button class="key" data-key="Z">Z</button><button class="key" data-key="X">X</button><button class="key" data-key="C">C</button><button class="key" data-key="V">V</button><button class="key" data-key="B">B</button><button class="key" data-key="N">N</button><button class="key" data-key="M">M</button>
-            <button class="key wide" data-key="BACKSPACE">DEL</button>
-        </div>
+<div id="keyboard">
+    <div class="kb-row">
+        <button class="key" onclick="onKeyPress('Q')">Q</button>
+        <button class="key" onclick="onKeyPress('W')">W</button>
+        <button class="key" onclick="onKeyPress('E')">E</button>
+        <button class="key" onclick="onKeyPress('R')">R</button>
+        <button class="key" onclick="onKeyPress('T')">T</button>
+        <button class="key" onclick="onKeyPress('Y')">Y</button>
+        <button class="key" onclick="onKeyPress('U')">U</button>
+        <button class="key" onclick="onKeyPress('I')">I</button>
+        <button class="key" onclick="onKeyPress('O')">O</button>
+        <button class="key" onclick="onKeyPress('P')">P</button>
     </div>
+    <div class="kb-row">
+        <button class="key" onclick="onKeyPress('A')">A</button>
+        <button class="key" onclick="onKeyPress('S')">S</button>
+        <button class="key" onclick="onKeyPress('D')">D</button>
+        <button class="key" onclick="onKeyPress('F')">F</button>
+        <button class="key" onclick="onKeyPress('G')">G</button>
+        <button class="key" onclick="onKeyPress('H')">H</button>
+        <button class="key" onclick="onKeyPress('J')">J</button>
+        <button class="key" onclick="onKeyPress('K')">K</button>
+        <button class="key" onclick="onKeyPress('L')">L</button>
+    </div>
+    <div class="kb-row">
+        <button class="key wide" onclick="onKeyPress('ENTER')">ENTER</button>
+        <button class="key" onclick="onKeyPress('Z')">Z</button>
+        <button class="key" onclick="onKeyPress('X')">X</button>
+        <button class="key" onclick="onKeyPress('C')">C</button>
+        <button class="key" onclick="onKeyPress('V')">V</button>
+        <button class="key" onclick="onKeyPress('B')">B</button>
+        <button class="key" onclick="onKeyPress('N')">N</button>
+        <button class="key" onclick="onKeyPress('M')">M</button>
+        <button class="key wide" onclick="onKeyPress('BACKSPACE')">DEL</button>
+    </div>
+</div>
 
 <script>
-    const words = ["SMILE", "SMART", "BRAIN", "WORLD", "HELLO", "PIZZA", "BEACH", "HOUSE", "LIGHT", "SOUND", "PILOT", "PIANO", "GHOST", "APPLE", "TIGER", "PLANE", "STORM", "BREAD", "FRUIT", "WATER", "CANDY", "DREAM", "FLAME", "MUSIC", "POWER", "NIGHT", "CLOCK", "PAPER", "TABLE", "CHAIR", "SPACE", "TRAIN", "EARTH", "PHONE", "WATCH", "GREEN", "BLACK", "WHITE", "STARS", "RIVER", "OCEAN", "HAPPY", "CLEAN", "SWEET", "LEARN", "WRITE", "PLANT", "COINS", "RADIO", "CLOUD", "BOOKS", "SHIRT", "ROADS", "GRASS", "SMALL", "LARGE", "ROUND", "READY", "TOTAL", "SNAKE", "MOUSE", "HORSE", "EVERY", "FOUND", "STILL", "THINK", "PLACE", "COULD", "WHERE", "OTHER", "ABOUT", "GREAT", "THESE", "WHICH", "AFTER", "FIRST", "NEVER", "RIGHT", "BEING", "THOSE", "SHOULD", "HEART", "POINT", "VOICE", "ALONG", "ALONE", "UNDER", "WHILE", "WORDS", "STEEL", "LEVEL", "SPEED", "STYLE", "FRAME", "STATE", "QUIET", "QUICK", "CRANE", "AUDIO", "ADIEU", "MEDIA", "RADIO", "VIDEO"];
-
-    let secretWord = words[Math.floor(Math.random() * words.length)];
+    const dictionary = ["SMILE", "SMART", "BRAIN", "WORLD", "HELLO", "LIGHT", "HOUSE", "PLANE", "WATER", "MUSIC"];
+    let secretWord = dictionary[Math.floor(Math.random() * dictionary.length)];
     let currentGuess = "";
     let currentRow = 0;
     let gameOver = false;
 
-    function initBoard() {
-        const board = document.getElementById('board');
-        for (let i = 0; i < 6; i++) {
-            const row = document.createElement('div');
-            row.className = 'row';
-            for (let j = 0; j < 5; j++) {
-                const tile = document.createElement('div');
-                tile.className = 'tile';
-                tile.id = `t-${i}-${j}`;
-                tile.innerHTML = `<div class="tile-inner"></div>`;
-                row.appendChild(tile);
-            }
-            board.appendChild(row);
+    // رسم البورد
+    const board = document.getElementById('board');
+    for (let i = 0; i < 6; i++) {
+        const row = document.createElement('div');
+        row.className = 'row';
+        for (let j = 0; j < 5; j++) {
+            const tile = document.createElement('div');
+            tile.className = 'tile';
+            tile.id = `tile-${i}-${j}`;
+            row.appendChild(tile);
         }
+        board.appendChild(row);
     }
 
-    function handleInput(key) {
+    // دالة الكتابة المشتركة (للكيبورد الحقيقي وأزرار الشاشة)
+    function onKeyPress(key) {
         if (gameOver) return;
+
         if (key === 'ENTER') {
             submitGuess();
         } else if (key === 'BACKSPACE' || key === 'DELETE') {
             if (currentGuess.length > 0) {
-                const activeTile = document.querySelector(`#t-${currentRow}-${currentGuess.length-1} .tile-inner`);
-                activeTile.textContent = "";
                 currentGuess = currentGuess.slice(0, -1);
+                updateBoard();
             }
         } else if (currentGuess.length < 5 && /^[A-Z]$/.test(key)) {
             currentGuess += key;
-            const activeTile = document.querySelector(`#t-${currentRow}-${currentGuess.length-1} .tile-inner`);
-            activeTile.textContent = key;
+            updateBoard();
+        }
+    }
+
+    function updateBoard() {
+        for (let i = 0; i < 5; i++) {
+            const tile = document.getElementById(`tile-${currentRow}-${i}`);
+            tile.textContent = currentGuess[i] || "";
         }
     }
 
     function submitGuess() {
         if (currentGuess.length !== 5) return;
-        
-        if (!words.includes(currentGuess.toUpperCase())) {
-            document.getElementById('message').textContent = "Not in list!";
-            setTimeout(() => document.getElementById('message').textContent = "", 1500);
-            return;
-        }
 
         const guess = currentGuess;
         const rowIdx = currentRow;
-        currentRow++;
-        currentGuess = "";
 
         for (let i = 0; i < 5; i++) {
-            const tile = document.getElementById(`t-${rowIdx}-${i}`);
+            const tile = document.getElementById(`tile-${rowIdx}-${i}`);
             const letter = guess[i];
-            
+
+            // إضافة الأنميشن
             setTimeout(() => {
                 tile.classList.add('flip');
+                
                 if (letter === secretWord[i]) {
                     tile.classList.add('correct');
                 } else if (secretWord.includes(letter)) {
@@ -157,36 +155,29 @@
                 } else {
                     tile.classList.add('absent');
                 }
-                
-                if (i === 4) checkStatus(guess);
             }, i * 200);
         }
-    }
 
-    function checkStatus(guess) {
         if (guess === secretWord) {
-            document.getElementById('message').textContent = "Excellent! 🏆";
+            document.getElementById('message').textContent = "You Won! 🏆";
             gameOver = true;
-            document.getElementById('reset-btn').style.display = "block";
-        } else if (currentRow === 6) {
-            document.getElementById('message').textContent = "Word: " + secretWord;
+        } else if (currentRow === 5) {
+            document.getElementById('message').textContent = "Word was: " + secretWord;
             gameOver = true;
-            document.getElementById('reset-btn').style.display = "block";
+        } else {
+            currentRow++;
+            currentGuess = "";
         }
     }
 
-    // تشغيل أزرار الشاشة (اللمس والماوس)
-    document.querySelectorAll('.key').forEach(button => {
-        button.addEventListener('click', () => handleInput(button.getAttribute('data-key')));
-    });
-
-    // تشغيل كيبورد الكمبيوتر (الكيبورد الحقيقي)
+    // الربط بالكيبورد الحقيقي
     document.addEventListener('keydown', (e) => {
-        const key = e.key.toUpperCase();
-        handleInput(key);
+        let key = e.key.toUpperCase();
+        if (key === 'BACKSPACE' || key === 'ENTER' || /^[A-Z]$/.test(key)) {
+            onKeyPress(key);
+        }
     });
-
-    initBoard();
 </script>
+
 </body>
 </html>
